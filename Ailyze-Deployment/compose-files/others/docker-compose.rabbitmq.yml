@@ -8,14 +8,17 @@ services:
       - "5672:5672"  # RabbitMQ main port
       - "15672:15672"  # RabbitMQ management plugin port
     environment:
-      - RABBITMQ_DEFAULT_USER=staginguser
-      - RABBITMQ_DEFAULT_PASS=stagingpassword
+      - RABBITMQ_DEFAULT_USER=productionuser
+      - RABBITMQ_DEFAULT_PASS=productionpassword
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     env_file:
       - ./.env
     networks:
-      ailyze-nw:
-
+      - ailyze-deployment_ailyze-nw
 volumes:
   rabbitmq_data:
+
+networks:
+  ailyze-deployment_ailyze-nw:
+    external: true
