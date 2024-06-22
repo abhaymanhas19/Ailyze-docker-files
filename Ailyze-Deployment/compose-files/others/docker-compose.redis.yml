@@ -6,4 +6,8 @@ services:
     env_file:
       - ./.env
     networks:
-      ailyze-nw:
+      - ailyze-deployment_ailyze-nw
+
+networks:
+  ailyze-deployment_ailyze-nw:
+     external: true
