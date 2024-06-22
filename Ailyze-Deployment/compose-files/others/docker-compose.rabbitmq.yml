@@ -22,3 +22,80 @@ volumes:
 networks:
   ailyze-deployment_ailyze-nw:
     external: true
+
+
+
+
+##############################################
+#for rabbitmq multiple instance with haproxy
+
+version: '3.8'
+
+services: 
+  rabbitmq1:
+    image: "rabbitmq:3-management"
+    hostname: rabbitmq1
+    container_name: rabbitmq1
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=secretcookie
+      - RABBITMQ_DEFAULT_USER=productionuser
+      - RABBITMQ_DEFAULT_PASS=productionpassword
+      - RABBITMQ_ULIMIT_NOFILES=65536
+      - RABBITMQ_NODENAME=rabbit@rabbitmq1
+    volumes:
+      - rabbitmq_data1:/var/lib/rabbitmq
+    networks:
+      - ailyze-nw
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  rabbitmq2:
+    image: "rabbitmq:3-management"
+    hostname: rabbitmq2
+    container_name: rabbitmq2
+    environment:
+      - RABBITMQ_ERLANG_COOKIE=secretcookie
+      - RABBITMQ_DEFAULT_USER=productionuser
+      - RABBITMQ_DEFAULT_PASS=productionpassword
+      - RABBITMQ_ULIMIT_NOFILES=65536
+      - RABBITMQ_NODENAME=rabbit@rabbitmq2
+      - JOIN_CLUSTER_HOST=rabbitmq1
+    volumes:
+      - rabbitmq_data2:/var/lib/rabbitmq
+    networks:
+      - ailyze-nw
+    depends_on:
+      - rabbitmq1
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    volumes:
+      - /home/azureuser/Ailyze-Deployment/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+    ports:
+      - "5672:5672"
+    depends_on:
+      - rabbitmq1
+      - rabbitmq2
+    networks:
+      - ailyze-nw
+
+
+volumes:
+  rabbitmq_data1:
+  rabbitmq_data2:
+
+networks:
+  ailyze-nw:
+    driver: bridge
+
