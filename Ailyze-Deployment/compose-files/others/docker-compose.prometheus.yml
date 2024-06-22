@@ -2,22 +2,33 @@ version: '3.8'
 
 services:
   prometheus:
-      image: prom/prometheus
-      container_name: prometheus
-      volumes:
-        - ../Ailyze_openai_dajngo/AILYZE/AILYZE/prometheus.yml:/etc/prometheus/prometheus.yml
-      ports:
-        - "9090:9090"
-      networks:
-        ailyze-nw:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ../Ailyze_openai_dajngo/AILYZE/AILYZE/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - ailyze-deployment_ailyze-nw
 
-  node_exporter:
-    image: quay.io/prometheus/node-exporter:latest
-    container_name: node_exporter
-    command:
-      - '--path.rootfs=/host'
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
     restart: unless-stopped
     volumes:
-      - '/:/host:ro,rslave'
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    ports:
+      - "9100:9100"
     networks:
-      ailyze-nw:
+      - ailyze-deployment_ailyze-nw
+
+networks:
+  ailyze-deployment_ailyze-nw:
+    external: true
